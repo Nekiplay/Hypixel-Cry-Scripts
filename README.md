@@ -10,5 +10,5 @@
 ## Libraries
 | Name           |Description                    | Required version | Download       |
 |----------------|-------------------------------|------------------|----------------|
-| Rotations      | Simple turn assistant         | v1.1.2           | [Raw](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/libs/rotations.lua)
-| Rotations v2   | Advanced turn assistant       | v1.1.2           | [Raw](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/libs/rotations_v2)
+| Rotations      | Simple turn assistant         | v1.1.1           | [Raw](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/libs/rotations.lua)
+| Rotations v2   | Advanced turn assistant       | v1.1.1           | [Raw](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/libs/rotations_v2)
