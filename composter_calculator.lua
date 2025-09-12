@@ -28,8 +28,8 @@ registerClientTick(function()
             -- Показываем информацию
             if not sended then
                 player.addMessage("§cComposter Calculator")
-                player.addMessage("§aBox of Seed: §f§l" .. boxesNeeded .. "x.")
-                player.addMessage("§bVolta: §f§l" .. voltaNeeded .. "x.")
+                player.addMessage("§aBox of Seed: §f§l" .. boxesNeeded .. "§rx.")
+                player.addMessage("§bVolta: §f§l" .. voltaNeeded .. "§rx.")
                 player.addMessage("§7(Organic: " .. neededOrganic .. "/" .. organicMax * 1000 .. ")")
                 player.addMessage("§7(Fuel: " .. neededFuel .. "/" .. fuelMax * 1000 .. ")")
                 
