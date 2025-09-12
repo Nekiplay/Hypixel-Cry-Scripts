@@ -27,15 +27,18 @@ end
 registerClientTick(function()
     -- Очищаем предыдущий список
     pestEntities = {}
-    
-    -- Получаем все сущности и фильтруем пестов
-    local entities = world.getEntities()
-    for _, entity in ipairs(entities) do
-        if entity ~= nil and entity.head ~= nil and entity.head.head_texture ~= nil then
-            if isPestTexture(entity.head.head_texture) then
-                table.insert(pestEntities, entity)
-            end
-        end
+    local position = player.getLocation()
+
+    if position == "GARDEN" then
+    	-- Получаем все сущности и фильтруем пестов
+    	local entities = world.getEntities()
+    	for _, entity in ipairs(entities) do
+        	if entity ~= nil and entity.head ~= nil and entity.head.head_texture ~= nil then
+            	if isPestTexture(entity.head.head_texture) then
+                	table.insert(pestEntities, entity)
+            	end
+        	end
+    	end
     end
 end)
 
