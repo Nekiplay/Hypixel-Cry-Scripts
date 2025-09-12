@@ -1,4 +1,4 @@
-# Hypixel Cry Lua Scripts!
+# [Hypixel Cry](https://github.com/Nekiplay/Hypixel-Cry) Lua Scripts!
 
 ## Scripts
 | Name                 | Description                                    | Author    | Required minimum version | Download                                                                                                       |
