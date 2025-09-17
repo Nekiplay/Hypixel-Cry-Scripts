@@ -16,7 +16,7 @@ local fuelItem = player.inventory.getStackFromContainer(43 + 9)
 
 if fuelItem and organicItem and organicItem.lore and #organicItem.lore > 0 then
     local organicCurrent, organicMax = matchComposterResource(organicItem.lore[1])
-    local fuelCurrent, fuelMax = matchComposterResource(fuelItem.lore[1]) -- Исправлено: matchComposterResource
+    local fuelCurrent, fuelMax = matchComposterResource(fuelItem.lore[1])
     if organicCurrent and organicMax and fuelCurrent and fuelMax then
         -- Рассчитываем сколько нужно добавить
         local neededOrganic = organicMax * 1000 - organicCurrent
