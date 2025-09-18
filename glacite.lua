@@ -36,11 +36,13 @@ local currentTargetBlock = nil
 local miningTimer = 0
 local teleportTimer = 0 -- Tracks ticks since teleport started
 local TELEPORT_TIMEOUT = 200 -- Timeout after ~10 seconds (20 ticks/sec)
+local BREAK_TIMEOUT = 50 -- Timeout for breaking a block (~2.5 seconds)
 local MIN_MANA = 90 -- Minimum mana required for teleport
 local delayTimer = 0 -- Tracks ticks for delay between teleports
 local TELEPORT_DELAY = 10 -- Delay of ~1 second (20 ticks/sec)
 local manaWaitTimer = 0 -- Tracks ticks waiting for mana
 local MANA_WAIT_TIMEOUT = 170 -- Timeout after ~10 seconds (20 ticks/sec)
+local failedBlocks = {} -- Tracks failed blocks to skip
 
 -- Function to find the nearest block of the specified type within radius
 local function findNearestBlock(blockType, radius)
@@ -52,13 +54,14 @@ local function findNearestBlock(blockType, radius)
     local minDistSq = math.huge
     local target = nil
     
-    for dx = -radius, radius do
-        for dy = -radius, radius do
-            for dz = -radius, radius do
+    for dx = -math.floor(radius), math.floor(radius) do
+        for dy = -math.floor(radius), math.floor(radius) + 1 do
+            for dz = -math.floor(radius), math.floor(radius) do
                 local bx = px + dx
                 local by = py + dy
                 local bz = pz + dz
-                if world.getBlock(math.floor(bx), math.floor(by), math.floor(bz)).name == blockType and by >= py then
+                local key = math.floor(bx) .. "," .. math.floor(by) .. "," .. math.floor(bz)
+                if not failedBlocks[key] and world.getBlock(math.floor(bx), math.floor(by), math.floor(bz)).name == blockType and by >= py then
                     local distSq = dx*dx + dy*dy + dz*dz
                     if distSq < minDistSq then
                         minDistSq = distSq
@@ -80,6 +83,7 @@ registerClientTick(function()
         isTeleporting = false
         teleportTimer = 0
         delayTimer = TELEPORT_DELAY -- Start delay after teleport
+        failedBlocks = {} -- Reset failed blocks after teleport
         local point = teleportPoints[currentPointIndex]
         if point.mine then
             isMining = true
@@ -127,12 +131,25 @@ registerClientTick(function()
             -- Check if block is broken
             miningTimer = miningTimer + 1
             local blockName = world.getBlock(currentTargetBlock.x, currentTargetBlock.y, currentTargetBlock.z).name
-            if blockName == "block.minecraft.air" or miningTimer > 50 then  -- Timeout after ~2.5 seconds
-                -- Block broken or timed out, find next block without releasing attack
+            if blockName == "block.minecraft.air" then
+                -- Block broken, find next block without releasing attack
+                miningState = 0
+                miningTimer = 0
+                currentTargetBlock = nil
+            elseif miningTimer > BREAK_TIMEOUT then
+                -- Timeout: release attack, mark as failed, and find next block
+                player.input.setPressedAttack(false)
+                local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
+                failedBlocks[key] = true
                 miningState = 0
                 miningTimer = 0
                 currentTargetBlock = nil
             end
+        end
+
+        local ray = player.raycast(8)
+        if ray and ray.type == "entity" then
+            player.input.setPressedAttack(false) 
         end
     else
         -- Start teleporting to the current coordinate if not already teleporting, mining, or in delay
