@@ -48,15 +48,20 @@ local currentTargetBlock = nil
 local miningTimer = 0
 local teleportTimer = 0 -- Tracks ticks since teleport started
 local activationTimer = 0 -- Tracks ticks for ability activation
-local TELEPORT_TIMEOUT = 200 -- Timeout after ~10 seconds (20 ticks/sec)
+local TELEPORT_TIMEOUT = 400 -- Timeout after ~20 seconds (20 ticks/sec)
 local BREAK_TIMEOUT = 55 -- Timeout for breaking a block (~2.5 seconds)
 local ACTIVATION_DURATION = 2 -- Hold use for ~0.1 seconds (2 ticks)
 local MIN_MANA = 90 -- Minimum mana required for teleport
 local delayTimer = 0 -- Tracks ticks for delay between teleports
-local TELEPORT_DELAY = 1 -- Delay of ~1 second (20 ticks/sec)
+local TELEPORT_DELAY = 7 -- Delay of ~1 second (20 ticks/sec)
 local manaWaitTimer = 0 -- Tracks ticks waiting for mana
 local MANA_WAIT_TIMEOUT = 170 -- Timeout after ~10 seconds (20 ticks/sec)
 local failedBlocks = {} -- Tracks failed blocks to skip
+
+-- Добавлены переменные для управления таймером
+local isAtAnyPoint = false -- Флаг, указывающий что игрок находится на одной из точек
+local macroStartTime = nil -- Время начала работы макроса на точке
+local totalMacroTime = 0 -- Общее время работы макроса
 
 local function getCurrentPointIndex()
     local pos = player.getPos()
@@ -67,7 +72,7 @@ local function getCurrentPointIndex()
         local dx = math.abs(pos.x - targetX)
         local dy = math.abs(pos.y - targetY)
         local dz = math.abs(pos.z - targetZ)
-        if dx < 0.6 and dy < 1.6 and dz < 0.6 then
+        if dx < 0.6 and dy < 1.2 and dz < 0.6 then
             return i
         end
     end
@@ -83,7 +88,7 @@ local function isAtPoint(index)
     local dx = math.abs(pos.x - targetX)
     local dy = math.abs(pos.y - targetY)
     local dz = math.abs(pos.z - targetZ)
-    return dx < 0.6 and dy < 1.6 and dz < 0.6
+    return dx < 0.6 and dy < 1.2 and dz < 0.6
 end
 
 -- Function to find the nearest block of the specified type within radius
@@ -117,44 +122,50 @@ local function findNearestBlock(blockType, radius)
     return target
 end
 
-local start_time = os.time()
-
 register2DRenderer(function(context)
-    local scale = context.getWindowScale()
-    
-    local elapsed = os.time() - start_time
-    local hours = math.floor(elapsed / 3600)
-    local minutes = math.floor((elapsed % 3600) / 60)
-    local seconds = elapsed % 60
-    local time_str = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-    
-    local macro_text = "§bGlacite §6macrosing"
-    local time_text = "§c" .. time_str
-    
-    -- Assuming getTextWidth takes the text and returns width for scale=1
-    local macro_width = context.getTextWidth("Glacite macrosing")
-    local time_width = context.getTextWidth(time_str)
-    
-    -- Center positions (adjust y for vertical placement, e.g., slightly above and below center)
-    local center_x_macro = (scale.width - macro_width + 10) / 2
-    local center_y_macro = (scale.height / 2) - 13  -- Slightly above center
-    
-    local center_x_time = (scale.width - time_width + 10) / 2
-    local center_y_time = (scale.height / 2) + 7   -- Slightly below center
-    
-    local obj2 = {
-        x = center_x_macro, y = center_y_macro, scale = 1,
-        text = macro_text,
-        red = 0, green = 0, blue = 0
-    }
-    context.renderText(obj2)
-    
-    local obj3 = {
-        x = center_x_time, y = center_y_time, scale = 0.75,
-        text = time_text,
-        red = 0, green = 0, blue = 0
-    }
-    context.renderText(obj3)
+    -- Показывать текст только если игрок находится на одной из точек
+    if isAtAnyPoint then
+        local scale = context.getWindowScale()
+        
+        -- Рассчитываем время работы макроса
+        local elapsed = totalMacroTime
+        if macroStartTime then
+            elapsed = elapsed + (os.time() - macroStartTime)
+        end
+        
+        local hours = math.floor(elapsed / 3600)
+        local minutes = math.floor((elapsed % 3600) / 60)
+        local seconds = elapsed % 60
+        local time_str = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+        
+        local macro_text = "§bGlacite §6macrosing"
+        local time_text = "§c" .. time_str
+        
+        -- Assuming getTextWidth takes the text and returns width for scale=1
+        local macro_width = context.getTextWidth("Glacite macrosing")
+        local time_width = context.getTextWidth(time_str)
+        
+        -- Center positions (adjust y for vertical placement, e.g., slightly above and below center)
+        local center_x_macro = (scale.width - macro_width + 10) / 2
+        local center_y_macro = (scale.height / 2) - 13  -- Slightly above center
+        
+        local center_x_time = (scale.width - time_width + 10) / 2
+        local center_y_time = (scale.height / 2) + 7   -- Slightly below center
+        
+        local obj2 = {
+            x = center_x_macro, y = center_y_macro, scale = 1,
+            text = macro_text,
+            red = 0, green = 0, blue = 0
+        }
+        context.renderText(obj2)
+        
+        local obj3 = {
+            x = center_x_time, y = center_y_time, scale = 0.75,
+            text = time_text,
+            red = 0, green = 0, blue = 0
+        }
+        context.renderText(obj3)
+    end
 end)
 
 registerWorldRenderer(function(context)
@@ -182,15 +193,42 @@ registerWorldRenderer(function(context)
             x = routePoints[i].x, y = routePoints[i].y + 0.5, z = routePoints[i].z,
             red = 85, green = 255, blue = 85,
             scale = 1,
-            text = tostring(i), through_walls = true
+            text = tostring(i), through_walls = false
         }
         context.renderText(text)
+
+        local filled = {
+            x = routePoints[i].x - 0.5, y = routePoints[i].y - 1, z = routePoints[i].z,
+            red = 85, green = 255, blue = 85, alpha = 140,
+            through_walls = false
+        }
+        context.renderFilled(filled)
     end
 end)
 
 registerClientTick(function()
     local teleportComplete = teleporter.update()
     world.setBlock(19, 127, 311, 0)
+    
+    -- Проверяем, находится ли игрок на одной из точек
+    local currentAtPoint = getCurrentPointIndex() ~= nil
+    local wasAtAnyPoint = isAtAnyPoint
+    
+    -- Обновляем состояние нахождения на точке
+    isAtAnyPoint = currentAtPoint
+    
+    -- Управление таймером работы макроса
+    if isAtAnyPoint and not wasAtAnyPoint then
+        -- Игрок только что прибыл на точку - запускаем таймер
+        macroStartTime = os.time()
+    elseif not isAtAnyPoint and wasAtAnyPoint then
+        -- Игрок ушел с точки - останавливаем таймер и сохраняем общее время
+        if macroStartTime then
+            totalMacroTime = totalMacroTime + (os.time() - macroStartTime)
+            macroStartTime = nil
+        end
+    end
+    
     -- Handle teleportation completion
     if teleportComplete or (isTeleporting and teleportTimer > TELEPORT_TIMEOUT) then
         isTeleporting = false
@@ -282,7 +320,7 @@ registerClientTick(function()
             end
         end
 
-        local ray = player.raycast(8)
+        local ray = player.raycast(6)
         if ray and ray.type == "entity" then
             player.input.setPressedAttack(false) 
             miningState = 0
@@ -334,3 +372,5 @@ registerClientTick(function()
         delayTimer = delayTimer - 1
     end
 end)
+
+return "§bmacros §aenabled"
