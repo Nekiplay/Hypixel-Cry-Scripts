@@ -48,12 +48,12 @@ local currentTargetBlock = nil
 local miningTimer = 0
 local teleportTimer = 0 -- Tracks ticks since teleport started
 local activationTimer = 0 -- Tracks ticks for ability activation
-local TELEPORT_TIMEOUT = 400 -- Timeout after ~20 seconds (20 ticks/sec)
+local TELEPORT_TIMEOUT = 800 -- Timeout after ~20 seconds (20 ticks/sec)
 local BREAK_TIMEOUT = 55 -- Timeout for breaking a block (~2.5 seconds)
 local ACTIVATION_DURATION = 2 -- Hold use for ~0.1 seconds (2 ticks)
 local MIN_MANA = 90 -- Minimum mana required for teleport
 local delayTimer = 0 -- Tracks ticks for delay between teleports
-local TELEPORT_DELAY = 7 -- Delay of ~1 second (20 ticks/sec)
+local TELEPORT_DELAY = 9 -- Delay of ~1 second (20 ticks/sec)
 local manaWaitTimer = 0 -- Tracks ticks waiting for mana
 local MANA_WAIT_TIMEOUT = 170 -- Timeout after ~10 seconds (20 ticks/sec)
 local failedBlocks = {} -- Tracks failed blocks to skip
@@ -189,13 +189,24 @@ registerWorldRenderer(function(context)
         }
         context.renderLinesFromPoints(line)
 
-        local text = {
-            x = routePoints[i].x, y = routePoints[i].y + 0.5, z = routePoints[i].z,
-            red = 85, green = 255, blue = 85,
-            scale = 1,
-            text = tostring(i), through_walls = false
-        }
-        context.renderText(text)
+        if isAtPoint(i) then
+            local text = {
+                x = routePoints[i].x, y = routePoints[i].y + 0.5, z = routePoints[i].z,
+                red = 85, green = 255, blue = 85,
+                scale = 2,
+                text = tostring(i), through_walls = true
+            }
+            context.renderText(text)
+        else
+            local text = {
+                x = routePoints[i].x, y = routePoints[i].y + 0.5, z = routePoints[i].z,
+                red = 85, green = 255, blue = 85,
+                scale = 2,
+                text = tostring(i), through_walls = false
+            }
+            context.renderText(text)
+
+        end
 
         local filled = {
             x = routePoints[i].x - 0.5, y = routePoints[i].y - 1, z = routePoints[i].z,
@@ -229,6 +240,12 @@ registerClientTick(function()
         end
     end
     
+    local item = player.inventory.getStackFromContainer(0)
+    if item and isAtAnyPoint then
+        player.inventory.closeScreen()
+        return
+    end
+
     -- Handle teleportation completion
     if teleportComplete or (isTeleporting and teleportTimer > TELEPORT_TIMEOUT) then
         isTeleporting = false
