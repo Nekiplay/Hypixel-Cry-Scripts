@@ -5,23 +5,23 @@ local smoothRotation = require("rotations_v2")
 local teleportPoints = {
     {x = 24, y = 119, z = 268},  -- No yaw/pitch, no mining
     {x = 57, y = 124, z = 274},  -- No yaw/pitch, no mining
-    {x = 91, y = 116, z = 278, yaw = -83.4, pitch = 15.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = 86, y = 116, z = 291, yaw = 22.1, pitch = 6.3, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = 67, y = 116, z = 304, yaw = 55.7, pitch = 3.9, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 91, y = 116, z = 278, yaw = -83.4, pitch = 15.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = 86, y = 116, z = 291, yaw = 22.1, pitch = 6.3, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = 67, y = 116, z = 304, yaw = 55.7, pitch = 3.9, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
     {x = 54, y = 130, z = 317, yaw = 46.4, pitch = -34.1},
-    {x = 45, y = 130, z = 306, yaw = 141.6, pitch = 6.1, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = 39, y = 130, z = 308, yaw = 71.3, pitch = 13.8, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = 28, y = 129, z = 297, yaw = 133.3, pitch = 10.9, mine = false, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = 18, y = 126, z = 309, yaw = 38.4, pitch = 16.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = -12, y = 127, z = 320, yaw = 69.4, pitch = 1.7, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = -11, y = 126, z = 328, yaw = -6.5, pitch = 17.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = -27, y = 125, z = 330, yaw = 82.8, pitch = 12.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 45, y = 130, z = 306, yaw = 141.6, pitch = 6.1, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = 39, y = 130, z = 308, yaw = 71.3, pitch = 13.8, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = 28, y = 129, z = 297, yaw = 133.3, pitch = 10.9, mine = false, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = 18, y = 126, z = 309, yaw = 38.4, pitch = 16.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = -12, y = 127, z = 320, yaw = 69.4, pitch = 1.7, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = -11, y = 126, z = 328, yaw = -6.5, pitch = 17.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = -27, y = 125, z = 330, yaw = 82.8, pitch = 12.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
     {x = -40, y = 124, z = 320, yaw = 128.1, pitch = 5.3},
-    {x = -48, y = 123, z = 312, yaw = 134.4, pitch = 12.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = -42, y = 121, z = 297, yaw = -157.4, pitch = 15.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -48, y = 123, z = 312, yaw = 134.4, pitch = 12.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = -42, y = 121, z = 297, yaw = -157.4, pitch = 15.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
     {x = -52, y = 121, z = 277, yaw = 152.7, pitch = 3.6},
-    {x = -66, y = 118, z = 275, yaw = 98.7, pitch = 18.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
-    {x = -71, y = 127, z = 257, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -66, y = 118, z = 275, yaw = 98.7, pitch = 18.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
+    {x = -71, y = 127, z = 257, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.5},
     {x = -25, y = 120, z = 230, yaw = -120.9, pitch = 9.1},
     {x = -17, y = 129, z = 223, yaw = -130.8, pitch = -33},
     {x = -7, y = 131, z = 237},
@@ -91,28 +91,53 @@ local function isAtPoint(index)
     return dx < 0.6 and dy < 1.2 and dz < 0.6
 end
 
--- Function to find the nearest block of the specified type within radius
-local function findNearestBlock(blockType, radius)
+local function findNearestBlock(blockType, range)
     local playerPos = player.getPos()
-    local px = math.floor(playerPos.x + 0.5)
+    local px = math.floor(playerPos.x )
     local py = math.floor(playerPos.y + 1.5)
-    local pz = math.floor(playerPos.z + 0.5)
+    local pz = math.floor(playerPos.z)
+
+    local playerRot = player.getRotation()
+    local playerYaw, playerPitch = playerRot.yaw or playerRot, playerRot.pitch or 0
     
     local minDistSq = math.huge
+    local minAngleDiff = math.huge
     local target = nil
     
-    for dx = -math.floor(radius), math.floor(radius) -1 do
-        for dy = -math.floor(radius), math.floor(radius) - 1 do
-            for dz = -math.floor(radius), math.floor(radius) - 1 do
-                local bx = px + dx
-                local by = py + dy
-                local bz = pz + dz
-                local key = math.floor(bx) .. "," .. math.floor(by) .. "," .. math.floor(bz)
-                if not failedBlocks[key] and world.getBlock(math.floor(bx), math.floor(by), math.floor(bz)).name == blockType and by >= py - 1 then
+    for dx = -range, range do
+        for dy = -range, range do
+            for dz = -range, range do
+                local bx = math.floor(px + dx)
+                local by = math.floor(py + dy)
+                local bz = math.floor(pz + dz)
+                local key = bx .. "," .. by .. "," .. bz
+                
+                if not failedBlocks[key] and world.getBlock(bx, by, bz).name == blockType and by >= py - 1 then
+                    -- Правильное вычисление квадрата расстояния
                     local distSq = dx*dx + dy*dy + dz*dz
-                    if distSq < minDistSq then
+                    
+                    -- Вычисление углов к блоку
+                    local dxCenter = (bx + 0.5) - (px + 0.5)
+                    local dyCenter = (by + 0.5) - (py + 0.5)
+                    local dzCenter = (bz + 0.5) - (pz + 0.5)
+                    
+                    -- Вычисление требуемого поворота
+                    local targetYaw = math.deg(math.atan2(dzCenter, dxCenter)) + 90
+                    if targetYaw < 0 then targetYaw = targetYaw + 360 end
+                    
+                    local distHorizontal = math.sqrt(dxCenter*dxCenter + dzCenter*dzCenter)
+                    local targetPitch = math.deg(math.atan2(dyCenter, distHorizontal))
+                    
+                    -- Разница углов
+                    local yawDiff = math.abs((targetYaw - playerYaw + 180) % 360 - 180)
+                    local pitchDiff = math.abs(targetPitch - playerPitch)
+                    local totalAngleDiff = yawDiff + pitchDiff
+                    
+                    -- Приоритет: сначала по расстоянию, затем по углу поворота
+                    if distSq < minDistSq or (distSq == minDistSq and totalAngleDiff < minAngleDiff) then
                         minDistSq = distSq
-                        target = {x = math.floor(bx), y = math.floor(by), z = math.floor(bz)}
+                        minAngleDiff = totalAngleDiff
+                        target = {x = bx, y = by, z = bz}
                     end
                 end
             end
@@ -121,6 +146,11 @@ local function findNearestBlock(blockType, radius)
     
     return target
 end
+findNearestBlock("block.minecraft.stone", 4)
+
+-- Function to find the nearest block of the specified type within radius
+
+local status = "Farming"
 
 register2DRenderer(function(context)
     -- Показывать текст только если игрок находится на одной из точек
@@ -138,22 +168,34 @@ register2DRenderer(function(context)
         local seconds = elapsed % 60
         local time_str = string.format("%02d:%02d:%02d", hours, minutes, seconds)
         
-        local macro_text = "§bGlacite §6macrosing"
+        local status_text = "§6" .. status
+        local macro_text = "§bGlacite powder"
         local time_text = "§c" .. time_str
         
         -- Assuming getTextWidth takes the text and returns width for scale=1
         local macro_width = context.getTextWidth("Glacite macrosing")
         local time_width = context.getTextWidth(time_str)
+        local status_width = context.getTextWidth(status)
         
         -- Center positions (adjust y for vertical placement, e.g., slightly above and below center)
-        local center_x_macro = (scale.width - macro_width + 10) / 2
-        local center_y_macro = (scale.height / 2) - 13  -- Slightly above center
+        local center_x_status = (scale.width - status_width ) / 2
+        local center_y_status = (scale.height / 2) - 13  -- Slightly above cent
+
+        local center_x_macro = (scale.width - macro_width + 20) / 2
+        local center_y_macro = (scale.height / 2) - 18  -- Slightly above center
         
         local center_x_time = (scale.width - time_width + 10) / 2
         local center_y_time = (scale.height / 2) + 7   -- Slightly below center
         
+        local obj1 = {
+            x = center_x_status, y = center_y_status, scale = 1,
+            text = status_text,
+            red = 0, green = 0, blue = 0
+        }
+        context.renderText(obj1)
+
         local obj2 = {
-            x = center_x_macro, y = center_y_macro, scale = 1,
+            x = center_x_macro, y = center_y_macro - 5, scale = 1,
             text = macro_text,
             red = 0, green = 0, blue = 0
         }
@@ -218,6 +260,7 @@ registerWorldRenderer(function(context)
 end)
 
 registerClientTick(function()
+    if player.getLocation() == "DWARVEN_MINES" then
     local teleportComplete = teleporter.update()
     world.setBlock(19, 127, 311, 0)
     
@@ -288,6 +331,7 @@ registerClientTick(function()
         local point = teleportPoints[currentPointIndex]
         if miningState == 0 then
             -- Find next target block
+            status = "Finding"
             currentTargetBlock = findNearestBlock(point.blockType or "block.minecraft.stone", point.radius or 3)
             if currentTargetBlock == nil then
                 -- No more blocks, stop mining, advance, and start teleport
@@ -322,9 +366,12 @@ registerClientTick(function()
             local rotationDone = smoothRotation.update()
             miningTimer = miningTimer + 1
             if rotationDone or miningTimer > 20 then  -- Timeout after ~1 second (20 ticks/sec)
+                status = "Mining"
                 player.input.setPressedAttack(true) -- Start attack
                 miningState = 2
                 miningTimer = 0
+            elseif not rotationDone then
+                status = "Rotationg"
             end
         elseif miningState == 2 then
             -- Check if block is broken
@@ -416,10 +463,12 @@ registerClientTick(function()
     -- Increment timers
     if isTeleporting then
         teleportTimer = teleportTimer + 1
+        status = "Teleporting"
     end
     if delayTimer > 0 then
         delayTimer = delayTimer - 1
     end
+end
 end)
 
 return "§bmacros §aenabled"
