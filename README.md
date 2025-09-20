@@ -8,7 +8,7 @@
 | Composter Calculator | Shows purchasing information for the composter | [Neki_play](https://github.com/Nekiplay) | 1.1.3           | [Raw](https://raw.githubusercontent.com/Nekiplay/Hypixel-Cry-Scripts/refs/heads/main/composter_calculator.lua) |
 | Mithril Mining       | Auto mithril mining                            | [Neki_play](https://github.com/Nekiplay) | 1.1.1           | [Download](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/mining_v6.zip)                  |
 | Farming              | Semi automated farming in garden               | [Neki_play](https://github.com/Nekiplay) | 1.1.1           | [Download](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/farming.zip)                  |
-| [Glacite](https://youtu.be/vspWDZu9E-w)              | Automated farming glacite powder               | [Neki_play](https://github.com/Nekiplay) | 1.1.1           | [Raw](https://raw.githubusercontent.com/Nekiplay/Hypixel-Cry-Scripts/refs/heads/main/glacite.lua)                  |
+| [Glacite](https://youtu.be/vspWDZu9E-w)              | Automated farming glacite powder               | [Neki_play](https://github.com/Nekiplay) | 1.1.3           | [Raw](https://raw.githubusercontent.com/Nekiplay/Hypixel-Cry-Scripts/refs/heads/main/glacite_v2.lua)                  |
 
 
 ## Libraries
