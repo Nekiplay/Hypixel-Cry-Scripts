@@ -1,12 +1,12 @@
 local SmoothRotation = {}
-local rotationSpeed = 18
+local rotationSpeed = 16
 local targetYaw, targetPitch = 0, 0
 local currentYaw, currentPitch = 0, 0
 local isRotating = false
 local completionCallback = nil
 local initialYawDiff, initialPitchDiff = nil, nil
-local gravity = 6.0  -- Сила "гравитации" для замедления в конце
-local windX, windY = 0, 0  -- Случайные помехи для естественности
+local gravity = 6.0
+local windX, windY = 0, 0
 
 -- WindMouse алгоритм для плавного человеческого движения
 local function windMouse(startX, startY, destX, destY, G_0, W_0, M_0, D_0)
@@ -72,7 +72,6 @@ function SmoothRotation.setTargetRotation(yaw, pitch)
     isRotating = true
     initialYawDiff, initialPitchDiff = nil, nil
     
-    -- Инициализируем случайные помехи
     windX = (math.random() * 2 - 1) * 0.2
     windY = (math.random() * 2 - 1) * 0.2
     
@@ -81,8 +80,18 @@ end
 
 -- Плавный поворот к координатам
 function SmoothRotation.rotateToCoordinates(x, y, z)
-    local rotation = world.getRotation(x, y, z)
-    return SmoothRotation.setTargetRotation(rotation.yaw, rotation.pitch)
+    local playerPos = player.getPos()
+    local dx = x - playerPos.x
+    local dz = z - playerPos.z
+    
+    -- Если блок прямо над или под игроком
+    if math.sqrt(dx*dx + dz*dz) < 0.1 then
+        local rotation = world.getRotation(x, y, z)
+        return SmoothRotation.setTargetRotation(currentYaw, rotation.pitch)
+    else
+        local rotation = world.getRotation(x, y, z)
+        return SmoothRotation.setTargetRotation(rotation.yaw, rotation.pitch)
+    end
 end
 
 -- Плавный поворот к конкретным значениям yaw и pitch
@@ -106,16 +115,13 @@ end
 function SmoothRotation.update()
     if not isRotating then return false end
     
-    -- Получаем текущее вращение игрока
     local currentRot = player.getRotation()
     local currentYawRot = currentRot.yaw or currentRot
     local currentPitchRot = currentRot.pitch or 0
     
-    -- Вычисляем разницу углов
     local yawDiff = (targetYaw - currentYawRot + 180) % 360 - 180
     local pitchDiff = targetPitch - currentPitchRot
     
-    -- Проверяем, достигли ли цели
     if math.abs(yawDiff) < 0.1 and math.abs(pitchDiff) < 0.1 then
         player.setRotation(targetYaw, targetPitch)
         isRotating = false
@@ -127,15 +133,12 @@ function SmoothRotation.update()
         return true
     end
     
-    -- Применяем WindMouse-подобное поведение
     local totalDist = math.sqrt(yawDiff^2 + pitchDiff^2)
-    local maxStep = rotationSpeed * (1 + math.random() * 0.2)  -- Небольшая случайность в скорости
+    local maxStep = rotationSpeed * (1 + math.random() * 0.2)
     
-    -- Замедляемся при приближении к цели (гравитационный эффект)
     local slowdown = math.min(1, totalDist / 30.0)
     local effectiveSpeed = maxStep * slowdown
     
-    -- Добавляем небольшие случайные колебания для естественности
     if math.random() < 0.1 then
         windX = windX * 0.017 + (math.random() * 2 - 1.98)
         windY = windY * 0.017 + (math.random() * 2 - 1.98)
@@ -144,28 +147,24 @@ function SmoothRotation.update()
         windY = windY * 0.15
     end
     
-    -- Вычисляем шаги с учетом WindMouse алгоритма
     local yawStep, pitchStep = windMouse(
         0, 0, 
         yawDiff, pitchDiff,
         gravity, 
-        0.8,  -- Wind factor
-        effectiveSpeed * 1.2,  -- Max step
-        effectiveSpeed * 0.6   -- Target radius
+        0.8,
+        effectiveSpeed * 1.2,
+        effectiveSpeed * 0.6
     )
     
-    -- Ограничиваем максимальный шаг
     local stepMagnitude = math.sqrt(yawStep^2 + pitchStep^2)
     if stepMagnitude > effectiveSpeed then
         yawStep = (yawStep / stepMagnitude) * effectiveSpeed
         pitchStep = (pitchStep / stepMagnitude) * effectiveSpeed
     end
     
-    -- Добавляем случайные помехи
     yawStep = yawStep + windX * slowdown
     pitchStep = pitchStep + windY * slowdown
     
-    -- Применяем поворот
     currentYawRot = (currentYawRot + yawStep) % 360
     currentPitchRot = math.max(-90, math.min(90, currentPitchRot + pitchStep))
     
@@ -213,7 +212,6 @@ function SmoothRotation.getProgress()
     return math.max(0, math.min(1, 1 - (totalDiff / math.max(initialTotalDiff, 0.1))))
 end
 
--- Функция для получения знака числа
 function math.sign(x)
     return x > 0 and 1 or x < 0 and -1 or 0
 end
