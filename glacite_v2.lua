@@ -5,27 +5,27 @@ local smoothRotation = require("rotations_v2")
 local teleportPoints = {
     {x = 24, y = 119, z = 268},  -- No yaw/pitch, no mining
     {x = 57, y = 124, z = 274},  -- No yaw/pitch, no mining
-    {x = 91, y = 116, z = 278, yaw = -83.4, pitch = 15.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = 86, y = 116, z = 291, yaw = 22.1, pitch = 6.3, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = 67, y = 116, z = 304, yaw = 55.7, pitch = 3.9, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = 54, y = 130, z = 317, yaw = 46.4, pitch = -34.1},  -- Yaw/pitch, no mining
-    {x = 45, y = 130, z = 306, yaw = 141.6, pitch = 6.1, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = 39, y = 130, z = 308, yaw = 71.3, pitch = 13.8, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = 28, y = 129, z = 297, yaw = 133.3, pitch = 10.9, mine = false, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = 18, y = 126, z = 309, yaw = 38.4, pitch = 16.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -12, y = 127, z = 320, yaw = 69.4, pitch = 1.7, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -11, y = 126, z = 328, yaw = -6.5, pitch = 17.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -27, y = 125, z = 330, yaw = 82.8, pitch = 12.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -40, y = 124, z = 320, yaw = 128.1, pitch = 5.3}, -- Mining with yaw/pitch
-    {x = -48, y = 123, z = 312, yaw = 134.4, pitch = 12.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -42, y = 121, z = 297, yaw = -157.4, pitch = 15.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -52, y = 121, z = 277, yaw = 152.7, pitch = 3.6}, -- Mining with yaw/pitch
-    {x = -66, y = 118, z = 275, yaw = 98.7, pitch = 18.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -71, y = 127, z = 257, mine = true, blockType = "block.minecraft.packed_ice", radius = 3.3}, -- Mining with yaw/pitch
-    {x = -25, y = 120, z = 230, yaw = -120.9, pitch = 9.1}, -- Mining with yaw/pitch
-    {x = -17, y = 129, z = 223, yaw = -130.8, pitch = -33}, -- Mining with yaw/pitch
-    {x = -7, y = 131, z = 237}, -- Mining with yaw/pitch
-    {x = 4, y = 126, z = 244, yaw = -59.5, pitch = 28.5}, -- Mining with yaw/pitch
+    {x = 91, y = 116, z = 278, yaw = -83.4, pitch = 15.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 86, y = 116, z = 291, yaw = 22.1, pitch = 6.3, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 67, y = 116, z = 304, yaw = 55.7, pitch = 3.9, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 54, y = 130, z = 317, yaw = 46.4, pitch = -34.1},
+    {x = 45, y = 130, z = 306, yaw = 141.6, pitch = 6.1, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 39, y = 130, z = 308, yaw = 71.3, pitch = 13.8, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 28, y = 129, z = 297, yaw = 133.3, pitch = 10.9, mine = false, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = 18, y = 126, z = 309, yaw = 38.4, pitch = 16.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -12, y = 127, z = 320, yaw = 69.4, pitch = 1.7, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -11, y = 126, z = 328, yaw = -6.5, pitch = 17.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -27, y = 125, z = 330, yaw = 82.8, pitch = 12.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -40, y = 124, z = 320, yaw = 128.1, pitch = 5.3},
+    {x = -48, y = 123, z = 312, yaw = 134.4, pitch = 12.5, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -42, y = 121, z = 297, yaw = -157.4, pitch = 15.2, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -52, y = 121, z = 277, yaw = 152.7, pitch = 3.6},
+    {x = -66, y = 118, z = 275, yaw = 98.7, pitch = 18.0, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -71, y = 127, z = 257, mine = true, blockType = "block.minecraft.packed_ice", radius = 4},
+    {x = -25, y = 120, z = 230, yaw = -120.9, pitch = 9.1},
+    {x = -17, y = 129, z = 223, yaw = -130.8, pitch = -33},
+    {x = -7, y = 131, z = 237},
+    {x = 4, y = 126, z = 244, yaw = -59.5, pitch = 28.5},
 }
 
 local routePoints = {}
@@ -53,7 +53,7 @@ local BREAK_TIMEOUT = 55 -- Timeout for breaking a block (~2.5 seconds)
 local ACTIVATION_DURATION = 2 -- Hold use for ~0.1 seconds (2 ticks)
 local MIN_MANA = 90 -- Minimum mana required for teleport
 local delayTimer = 0 -- Tracks ticks for delay between teleports
-local TELEPORT_DELAY = 9 -- Delay of ~1 second (20 ticks/sec)
+local TELEPORT_DELAY = 10 -- Delay of ~1 second (20 ticks/sec)
 local manaWaitTimer = 0 -- Tracks ticks waiting for mana
 local MANA_WAIT_TIMEOUT = 170 -- Timeout after ~10 seconds (20 ticks/sec)
 local failedBlocks = {} -- Tracks failed blocks to skip
@@ -95,20 +95,20 @@ end
 local function findNearestBlock(blockType, radius)
     local playerPos = player.getPos()
     local px = math.floor(playerPos.x + 0.5)
-    local py = math.floor(playerPos.y + 0.5)
+    local py = math.floor(playerPos.y + 1.5)
     local pz = math.floor(playerPos.z + 0.5)
     
     local minDistSq = math.huge
     local target = nil
     
-    for dx = -math.floor(radius), math.floor(radius) do
-        for dy = -math.floor(radius), math.floor(radius) + 1 do
-            for dz = -math.floor(radius), math.floor(radius) do
+    for dx = -math.floor(radius), math.floor(radius) -1 do
+        for dy = -math.floor(radius), math.floor(radius) - 1 do
+            for dz = -math.floor(radius), math.floor(radius) - 1 do
                 local bx = px + dx
                 local by = py + dy
                 local bz = pz + dz
                 local key = math.floor(bx) .. "," .. math.floor(by) .. "," .. math.floor(bz)
-                if not failedBlocks[key] and world.getBlock(math.floor(bx), math.floor(by), math.floor(bz)).name == blockType and by >= py then
+                if not failedBlocks[key] and world.getBlock(math.floor(bx), math.floor(by), math.floor(bz)).name == blockType and by >= py - 1 then
                     local distSq = dx*dx + dy*dy + dz*dz
                     if distSq < minDistSq then
                         minDistSq = distSq
@@ -246,6 +246,15 @@ registerClientTick(function()
         return
     end
 
+    local ray = player.raycast(5)
+    if ray and ray.type == "entity" then
+        player.input.setPressedAttack(false) 
+        miningState = 0
+        miningTimer = 0
+        currentTargetBlock = nil
+        return
+    end
+
     -- Handle teleportation completion
     if teleportComplete or (isTeleporting and teleportTimer > TELEPORT_TIMEOUT) then
         isTeleporting = false
@@ -335,14 +344,37 @@ registerClientTick(function()
                 miningTimer = 0
                 currentTargetBlock = nil
             end
-        end
 
-        local ray = player.raycast(6)
-        if ray and ray.type == "entity" then
-            player.input.setPressedAttack(false) 
-            miningState = 0
-            miningTimer = 0
-            currentTargetBlock = nil
+            local ray = player.raycast(4.5)
+            if ray and ray.type == "miss" then
+                if currentTargetBlock and isMining then
+                    local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
+                    failedBlocks[key] = true
+                    player.input.setPressedAttack(true) -- Start attack
+                    miningState = 0
+                    miningTimer = 0
+                    currentTargetBlock = nil
+                end
+            elseif ray and ray.type == "block" then
+                local blockName = world.getBlock(ray.x, ray.y, ray.z).name
+                if currentTargetBlock and isMining and blockName ~= "block.minecraft.packed_ice" then
+                    local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
+                    failedBlocks[key] = true
+                    player.input.setPressedAttack(true) -- Start attack
+                    miningState = 0
+                    miningTimer = 0
+                    currentTargetBlock = nil
+                end
+            elseif not ray then
+                if currentTargetBlock and isMining then
+                    local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
+                    failedBlocks[key] = true
+                    player.input.setPressedAttack(true) -- Start attack
+                    miningState = 0
+                    miningTimer = 0
+                    currentTargetBlock = nil
+                end
+            end
         end
     end
     
