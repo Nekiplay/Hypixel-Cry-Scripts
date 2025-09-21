@@ -48,12 +48,12 @@ local currentTargetBlock = nil
 local miningTimer = 0
 local teleportTimer = 0 -- Tracks ticks since teleport started
 local activationTimer = 0 -- Tracks ticks for ability activation
-local TELEPORT_TIMEOUT = 800 -- Timeout after ~20 seconds (20 ticks/sec)
+local TELEPORT_TIMEOUT = 1300 -- Timeout after ~20 seconds (20 ticks/sec)
 local BREAK_TIMEOUT = 55 -- Timeout for breaking a block (~2.5 seconds)
 local ACTIVATION_DURATION = 2 -- Hold use for ~0.1 seconds (2 ticks)
 local MIN_MANA = 90 -- Minimum mana required for teleport
 local delayTimer = 0 -- Tracks ticks for delay between teleports
-local TELEPORT_DELAY = 10 -- Delay of ~1 second (20 ticks/sec)
+local TELEPORT_DELAY = 3 -- Delay of ~1 second (20 ticks/sec)
 local manaWaitTimer = 0 -- Tracks ticks waiting for mana
 local MANA_WAIT_TIMEOUT = 170 -- Timeout after ~10 seconds (20 ticks/sec)
 local failedBlocks = {} -- Tracks failed blocks to skip
@@ -133,7 +133,6 @@ local function findNearestBlock(blockType, range)
                     local pitchDiff = math.abs(targetPitch - playerPitch)
                     local totalAngleDiff = yawDiff + pitchDiff
                     
-                    -- Приоритет: сначала по расстоянию, затем по углу поворота
                     if distSq < minDistSq or (distSq == minDistSq and totalAngleDiff < minAngleDiff) then
                         minDistSq = distSq
                         minAngleDiff = totalAngleDiff
@@ -146,7 +145,6 @@ local function findNearestBlock(blockType, range)
     
     return target
 end
-findNearestBlock("block.minecraft.stone", 4)
 
 -- Function to find the nearest block of the specified type within radius
 
@@ -261,214 +259,204 @@ end)
 
 registerClientTick(function()
     if player.getLocation() == "DWARVEN_MINES" then
-    local teleportComplete = teleporter.update()
-    world.setBlock(19, 127, 311, 0)
-    
-    -- Проверяем, находится ли игрок на одной из точек
-    local currentAtPoint = getCurrentPointIndex() ~= nil
-    local wasAtAnyPoint = isAtAnyPoint
-    
-    -- Обновляем состояние нахождения на точке
-    isAtAnyPoint = currentAtPoint
-    
-    -- Управление таймером работы макроса
-    if isAtAnyPoint and not wasAtAnyPoint then
-        -- Игрок только что прибыл на точку - запускаем таймер
-        macroStartTime = os.time()
-    elseif not isAtAnyPoint and wasAtAnyPoint then
-        -- Игрок ушел с точки - останавливаем таймер и сохраняем общее время
-        if macroStartTime then
-            totalMacroTime = totalMacroTime + (os.time() - macroStartTime)
-            macroStartTime = nil
+        local teleportComplete = teleporter.update()
+        world.setBlock(19, 127, 311, 0)
+        
+        -- Проверяем, находится ли игрок на одной из точек
+        local currentAtPoint = getCurrentPointIndex() ~= nil
+        local wasAtAnyPoint = isAtAnyPoint
+        
+        -- Обновляем состояние нахождения на точке
+        isAtAnyPoint = currentAtPoint
+        
+        -- Управление таймером работы макроса
+        if isAtAnyPoint and not wasAtAnyPoint then
+            -- Игрок только что прибыл на точку - запускаем таймер
+            macroStartTime = os.time()
+        elseif not isAtAnyPoint and wasAtAnyPoint then
+            -- Игрок ушел с точки - останавливаем таймер и сохраняем общее время
+            if macroStartTime then
+                totalMacroTime = totalMacroTime + (os.time() - macroStartTime)
+                macroStartTime = nil
+            end
         end
-    end
-    
-    local item = player.inventory.getStackFromContainer(0)
-    if item and isAtAnyPoint then
-        player.inventory.closeScreen()
-        return
-    end
-
-    local ray = player.raycast(5)
-    if ray and ray.type == "entity" then
-        player.input.setPressedAttack(false) 
-        miningState = 0
-        miningTimer = 0
-        currentTargetBlock = nil
-        return
-    end
-
-    -- Handle teleportation completion
-    if teleportComplete or (isTeleporting and teleportTimer > TELEPORT_TIMEOUT) then
-        isTeleporting = false
-        teleportTimer = 0
-        if isAtPoint(currentPointIndex) then
-            delayTimer = TELEPORT_DELAY -- Start delay after teleport
-            failedBlocks = {} -- Reset failed blocks after teleport
-        end
-    end
-    
-    if isActivating then
-        activationTimer = activationTimer + 1
-        if activationTimer >= ACTIVATION_DURATION then
-            player.input.setPressedUse(false)
-            isActivating = false
-            isMining = true
-            miningState = 0
-            miningTimer = 0
-        end
-    end
-    
-    if isMining then
-        if not isAtPoint(currentPointIndex) then
-            isMining = false
-            player.input.setPressedAttack(false)
-            currentTargetBlock = nil
-            miningTimer = 0
-            miningState = 0
+        
+        local item = player.inventory.getStackFromContainer(0)
+        if item and isAtAnyPoint then
+            player.inventory.closeScreen()
             return
         end
-        local point = teleportPoints[currentPointIndex]
-        if miningState == 0 then
-            -- Find next target block
-            status = "Finding"
-            currentTargetBlock = findNearestBlock(point.blockType or "block.minecraft.stone", point.radius or 3)
-            if currentTargetBlock == nil then
-                -- No more blocks, stop mining, advance, and start teleport
-                isMining = false
-                player.input.setPressedAttack(false) -- Release attack when no blocks are found
-                currentPointIndex = (currentPointIndex % #teleportPoints) + 1
-                local nextPoint = teleportPoints[currentPointIndex]
-                local currentMana = player.getMana() or 0
-                if currentMana >= MIN_MANA or manaWaitTimer > MANA_WAIT_TIMEOUT then
-                    player.input.setSelectedSlot(1)
-                    if nextPoint.yaw and nextPoint.pitch then
-                        teleporter.setTargetTeleport(nextPoint.yaw, nextPoint.pitch)
-                    else
-                        teleporter.teleportToCoordinates(nextPoint.x, nextPoint.y, nextPoint.z)
-                    end
-                    isTeleporting = true
-                    teleportTimer = 0
-                    manaWaitTimer = 0
-                else
-                    manaWaitTimer = manaWaitTimer + 1
-                end
-            else
-                -- Select slot 1 (0-based) for mining
-                player.input.setSelectedSlot(0)
-                -- Rotate to the target block
-                smoothRotation.rotateToCoordinates(currentTargetBlock.x + 0.5, currentTargetBlock.y + 0.5, currentTargetBlock.z + 0.5)
-                miningState = 1
-                miningTimer = 0
-            end
-        elseif miningState == 1 then
-            -- Update rotation
-            local rotationDone = smoothRotation.update()
-            miningTimer = miningTimer + 1
-            if rotationDone or miningTimer > 20 then  -- Timeout after ~1 second (20 ticks/sec)
-                status = "Mining"
-                player.input.setPressedAttack(true) -- Start attack
-                miningState = 2
-                miningTimer = 0
-            elseif not rotationDone then
-                status = "Rotationg"
-            end
-        elseif miningState == 2 then
-            -- Check if block is broken
-            miningTimer = miningTimer + 1
-            local blockName = world.getBlock(currentTargetBlock.x, currentTargetBlock.y, currentTargetBlock.z).name
-            if blockName == "block.minecraft.air" then
-                -- Block broken, find next block without releasing attack
-                miningState = 0
-                miningTimer = 0
-                currentTargetBlock = nil
-            elseif miningTimer > BREAK_TIMEOUT then
-                -- Timeout: release attack, mark as failed, and find next block
-                player.input.setPressedAttack(false)
-                local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
-                failedBlocks[key] = true
-                miningState = 0
-                miningTimer = 0
-                currentTargetBlock = nil
-            end
 
-            local ray = player.raycast(4.5)
-            if ray and ray.type == "miss" then
-                if currentTargetBlock and isMining then
-                    local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
-                    failedBlocks[key] = true
-                    player.input.setPressedAttack(true) -- Start attack
-                    miningState = 0
-                    miningTimer = 0
-                    currentTargetBlock = nil
-                end
-            elseif ray and ray.type == "block" then
-                local blockName = world.getBlock(ray.x, ray.y, ray.z).name
-                if currentTargetBlock and isMining and blockName ~= "block.minecraft.packed_ice" then
-                    local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
-                    failedBlocks[key] = true
-                    player.input.setPressedAttack(true) -- Start attack
-                    miningState = 0
-                    miningTimer = 0
-                    currentTargetBlock = nil
-                end
-            elseif not ray then
-                if currentTargetBlock and isMining then
-                    local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
-                    failedBlocks[key] = true
-                    player.input.setPressedAttack(true) -- Start attack
-                    miningState = 0
-                    miningTimer = 0
-                    currentTargetBlock = nil
-                end
+        local ray = player.raycast(4.5)
+        if ray and ray.type == "entity" then
+            player.input.setPressedAttack(false) 
+            miningState = 0
+            miningTimer = 0
+            currentTargetBlock = nil
+            return
+        end
+
+        -- Handle teleportation completion
+        if teleportComplete or (isTeleporting and teleportTimer > TELEPORT_TIMEOUT) then
+            isTeleporting = false
+            teleportTimer = 0
+            if isAtAnyPoint then
+                delayTimer = TELEPORT_DELAY -- Start delay after teleport
+                failedBlocks = {} -- Reset failed blocks after teleport
             end
         end
-    end
-    
-    if not isTeleporting and not isMining and not isActivating and delayTimer == 0 then
-        local atIndex = getCurrentPointIndex()
-        if atIndex then
-            currentPointIndex = atIndex
+        
+        if isActivating then
+            activationTimer = activationTimer + 1
+            if activationTimer >= ACTIVATION_DURATION then
+                player.input.setPressedUse(false)
+                isActivating = false
+                isMining = true
+                miningState = 0
+                miningTimer = 0
+            end
+        end
+        
+        if isMining then
+            if not isAtPoint(currentPointIndex) then
+                isMining = false
+                player.input.setPressedAttack(false)
+                currentTargetBlock = nil
+                miningTimer = 0
+                miningState = 0
+                return
+            end
             local point = teleportPoints[currentPointIndex]
-            local blockType = point.blockType or "block.minecraft.stone"
-            local radius = point.radius or 3
-            if point.mine and findNearestBlock(blockType, radius) ~= nil then
-                isActivating = true
-                activationTimer = 0
-                player.input.setSelectedSlot(0)
-                player.input.setPressedUse(true)
-            else
-                currentPointIndex = (currentPointIndex % #teleportPoints) + 1
-                local nextPoint = teleportPoints[currentPointIndex]
-                local currentMana = player.getMana() or 0
-                if currentMana >= MIN_MANA or manaWaitTimer > MANA_WAIT_TIMEOUT then
-                    player.input.setSelectedSlot(1)
-                    if nextPoint.yaw and nextPoint.pitch then
-                        teleporter.setTargetTeleport(nextPoint.yaw, nextPoint.pitch)
+            if miningState == 0 then
+                -- Find next target block
+                status = "Finding"
+                currentTargetBlock = findNearestBlock(point.blockType or "block.minecraft.stone", point.radius or 3)
+                if currentTargetBlock == nil and player.isOnGround() then
+                    -- No more blocks, stop mining, advance, and start teleport
+                    isMining = false
+                    player.input.setPressedAttack(false) -- Release attack when no blocks are found
+                    currentPointIndex = (currentPointIndex % #teleportPoints) + 1
+                    local nextPoint = teleportPoints[currentPointIndex]
+                    local currentMana = player.getMana() or 0
+                    if currentMana >= MIN_MANA or manaWaitTimer > MANA_WAIT_TIMEOUT then
+                        player.input.setSelectedSlot(1)
+                        if nextPoint.yaw and nextPoint.pitch then
+                            teleporter.setTargetTeleport(nextPoint.yaw, nextPoint.pitch)
+                        else
+                            teleporter.teleportToCoordinates(nextPoint.x, nextPoint.y, nextPoint.z)
+                        end
+                        isTeleporting = true
+                        teleportTimer = 0
+                        manaWaitTimer = 0
                     else
-                        teleporter.teleportToCoordinates(nextPoint.x, nextPoint.y, nextPoint.z)
+                        manaWaitTimer = manaWaitTimer + 1
                     end
-                    isTeleporting = true
-                    teleportTimer = 0
-                    manaWaitTimer = 0
                 else
-                    manaWaitTimer = manaWaitTimer + 1
+                    -- Select slot 1 (0-based) for mining
+                    player.input.setSelectedSlot(0)
+                    -- Rotate to the target block
+                    smoothRotation.rotateToCoordinates(currentTargetBlock.x + 0.5, currentTargetBlock.y + 0.5, currentTargetBlock.z + 0.5)
+                    miningState = 1
+                    miningTimer = 0
+                end
+            elseif miningState == 1 then
+                -- Update rotation
+                local rotationDone = smoothRotation.update()
+                miningTimer = miningTimer + 1
+                if rotationDone or miningTimer > 20 then  -- Timeout after ~1 second (20 ticks/sec)
+                    status = "Mining"
+                    player.input.setPressedAttack(true) -- Start attack
+                    miningState = 2
+                    miningTimer = 0
+                elseif not rotationDone then
+                    status = "Rotationg"
+                end
+            elseif miningState == 2 then
+                -- Check if block is broken
+                miningTimer = miningTimer + 1
+                local blockName = world.getBlock(currentTargetBlock.x, currentTargetBlock.y, currentTargetBlock.z).name
+                if blockName == "block.minecraft.air" then
+                    -- Block broken, find next block without releasing attack
+                    miningState = 0
+                    miningTimer = 0
+                    currentTargetBlock = nil
+                elseif miningTimer > BREAK_TIMEOUT then
+                    -- Timeout: release attack, mark as failed, and find next block
+                    player.input.setPressedAttack(false)
+                    local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
+                    failedBlocks[key] = true
+                    miningState = 0
+                    miningTimer = 0
+                    currentTargetBlock = nil
+                end
+
+                local ray = player.raycast(4.5)
+                if ray and ray.type == "miss" then
+                    if currentTargetBlock and isMining then
+                        local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
+                        failedBlocks[key] = true
+                        player.input.setPressedAttack(false) -- Start attack
+                        miningState = 0
+                        miningTimer = 0
+                        currentTargetBlock = nil
+                    end
+                elseif not ray then
+                    if currentTargetBlock and isMining then
+                        local key = currentTargetBlock.x .. "," .. currentTargetBlock.y .. "," .. currentTargetBlock.z
+                        failedBlocks[key] = true
+                        player.input.setPressedAttack(false) -- Start attack
+                        miningState = 0
+                        miningTimer = 0
+                        currentTargetBlock = nil
+                    end
                 end
             end
-        else
-            manaWaitTimer = 0
+        end
+        
+        if not isTeleporting and not isMining and not isActivating and delayTimer == 0 then
+            local atIndex = getCurrentPointIndex()
+            if atIndex then
+                currentPointIndex = atIndex
+                local point = teleportPoints[currentPointIndex]
+                local blockType = point.blockType or "block.minecraft.stone"
+                local radius = point.radius or 3
+                if point.mine and findNearestBlock(blockType, radius) ~= nil then
+                    isActivating = true
+                    activationTimer = 0
+                    player.input.setSelectedSlot(0)
+                    player.input.setPressedUse(true)
+                else
+                    currentPointIndex = (currentPointIndex % #teleportPoints) + 1
+                    local nextPoint = teleportPoints[currentPointIndex]
+                    local currentMana = player.getMana() or 0
+                    if currentMana >= MIN_MANA or manaWaitTimer > MANA_WAIT_TIMEOUT then
+                        player.input.setSelectedSlot(1)
+                        if nextPoint.yaw and nextPoint.pitch then
+                            teleporter.setTargetTeleport(nextPoint.yaw, nextPoint.pitch)
+                        else
+                            teleporter.teleportToCoordinates(nextPoint.x, nextPoint.y, nextPoint.z)
+                        end
+                        isTeleporting = true
+                        teleportTimer = 0
+                        manaWaitTimer = 0
+                    else
+                        manaWaitTimer = manaWaitTimer + 1
+                    end
+                end
+            else
+                manaWaitTimer = 0
+            end
+        end
+        
+        -- Increment timers
+        if isTeleporting then
+            teleportTimer = teleportTimer + 1
+            status = "Teleporting"
+        end
+        if delayTimer > 0 then
+            delayTimer = delayTimer - 1
         end
     end
-    
-    -- Increment timers
-    if isTeleporting then
-        teleportTimer = teleportTimer + 1
-        status = "Teleporting"
-    end
-    if delayTimer > 0 then
-        delayTimer = delayTimer - 1
-    end
-end
 end)
 
 return "§bmacros §aenabled"
