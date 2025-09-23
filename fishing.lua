@@ -1,6 +1,6 @@
 -- Настройки задержки (в тиках)
 local PRESS_DELAY = 1   -- Задержка перед нажатием
-local ABILITY_DELAY = 25   -- Задержка перед нажатием способности
+local ABILITY_DELAY = 27   -- Задержка перед нажатием способности
 local RELEASE_DELAY = 1 -- Задержка перед отжатием
 
 local state = {
@@ -97,12 +97,15 @@ register2DRenderer(function(context)
     context.renderText(obj3)
 end)
 
-local lastLvEntity = nil
+local trackedEntities = {}
 
 -- Функция для проверки наличия нужной сущности поблизости
 local function hasTargetEntityNearby()
     local entities = world.getEntities()
-    local foundEntity = nil
+    local currentEntities = {}
+    local foundAny = false
+    
+    -- Собираем все текущие сущности
     for index, entity in ipairs(entities) do
         if entity ~= nil then
             local entityName = entity.display_name
@@ -110,27 +113,39 @@ local function hasTargetEntityNearby()
 
             -- Проверяем наличие "Lv" в имени и расстояние до игрока
             if entityName and string.find(entityName, "Lv") and distance <= 5 * 5 and 
-               entity.uuid ~= player.entity.uuid and
+               entity.uuid ~= player.entity.uuid and 
                entity.type ~= "entity.minecraft.experience_orb" and 
                entity.type ~= "entity.minecraft.fishing_bobber" and 
                entity.type ~= "entity.minecraft.item" then
-                foundEntity = entity
+                
+                currentEntities[entity.uuid] = true
+                foundAny = true
+                
+                -- Если это новая сущность, добавляем в отслеживаемые
+                if not trackedEntities[entity.uuid] then
+                    trackedEntities[entity.uuid] = true
+                end
             end
         end
     end
     
-    if lastLvEntity and not foundEntity then
-        -- Сущность исчезла - увеличиваем счетчик убитых
-        killed = killed + 1
-        lastLvEntity = nil
+    -- Проверяем, какие сущности исчезли (были убиты)
+    for uuid, _ in pairs(trackedEntities) do
+        if not currentEntities[uuid] then
+            -- Сущность исчезла - увеличиваем счетчик убитых
+            killed = killed + 1
+            trackedEntities[uuid] = nil  -- Удаляем из отслеживаемых
+        end
     end
     
-    -- Обновляем последнюю сущность
-    if foundEntity then
-        lastLvEntity = foundEntity
+    -- Очищаем trackedEntities от сущностей, которые больше не существуют
+    for uuid, _ in pairs(trackedEntities) do
+        if not currentEntities[uuid] then
+            trackedEntities[uuid] = nil
+        end
     end
     
-    return foundEntity ~= nil
+    return foundAny
 end
 
 registerClientTick(function()
