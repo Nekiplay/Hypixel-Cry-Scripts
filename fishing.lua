@@ -1,13 +1,15 @@
-local PRESS_DELAY_MIN = 2   -- Минимальная задержка перед нажатием
-local PRESS_DELAY_MAX = 4   -- Минимальная задержка перед нажатием
-local ABILITY_DELAY = 23   -- Задержка перед нажатием способности
-local ABILITY_RANGE = 5 -- Растояние способности для убийства
-local RELEASE_DELAY_MIN = 1 -- Задержка перед отжатием
-local RELEASE_DELAY_MAX = 2 -- Задержка перед отжатием
-local ENTITY_CHECK_DELAY = 2 -- Задержка следующей проверки что сущность есть рядом
-local ENTITY_SPAWN_DELAY = 7 -- Задержка проверки того что сущность появилась
-local PREFIX = "§7[§6Hypixel Cry§7]" -- Префикс для чата
+-- Config start
+local COUGHT_DELAY_MIN = 2   -- Minimum delay before cought
+local COUGHT_DELAY_MAX = 4   -- Maximum delay before cought
+local ABILITY_DELAY = 23   -- Delay before pressing the ability
+local ABILITY_RANGE = 4.5 -- Kill ability range
+local RELEASE_DELAY_MIN = 1 -- Delay before pushing up
+local RELEASE_DELAY_MAX = 2 -- Delay before pushing up
+local ENTITY_CHECK_DELAY = 2 -- Delay the next check that the entity is nearby
+local ENTITY_SPAWN_DELAY = 8 -- Delay in checking that the entity has appeared
+local PREFIX = "§7[§6Hypixel Cry§7]" -- Chat prefix
 local MODE = "Normal" -- "OneShot", "Normal"
+-- Config end
 
 local FISHGROD_SLOT = 0
 local ABILITY_SLOT = 1
@@ -133,7 +135,7 @@ local function hasTargetEntityNearby()
                 
                 currentEntities[entity.uuid] = true
                 foundAny = true
-                PRESS_DELAY = math.floor(math.random(PRESS_DELAY_MIN, PRESS_DELAY_MAX))
+                PRESS_DELAY = math.floor(math.random(COUGHT_DELAY_MIN, COUGHT_DELAY_MAX))
                 RELEASE_DELAY = math.floor(math.random(RELEASE_DELAY_MIN, RELEASE_DELAY_MAX))
                 
                 -- Если это новая сущность, добавляем в отслеживаемые
