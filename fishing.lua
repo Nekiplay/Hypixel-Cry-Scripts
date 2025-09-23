@@ -1,7 +1,14 @@
--- Настройки задержки (в тиках)
 local PRESS_DELAY = 1   -- Задержка перед нажатием
-local ABILITY_DELAY = 27   -- Задержка перед нажатием способности
+local ABILITY_DELAY = 24   -- Задержка перед нажатием способности
+local ABILITY_RANGE = 5 -- Растояние способности для убийства
 local RELEASE_DELAY = 1 -- Задержка перед отжатием
+local ENTITY_CHECK_DELAY = 2 -- Задержка следующей проверки что сущность есть рядом
+local ENTITY_SPAWN_DELAY = 9 -- Задержка проверки того что сущность появилась
+local PREFIX = "§7[§6Hypixel Cry§7]" -- Префикс для чата
+local MODE = "Normal" -- "OneShot", "Normal"
+
+local FISHGROD_SLOT = 0
+local ABILITY_SLOT = 1
 
 local state = {
     tick = 0,
@@ -16,6 +23,8 @@ local killed = 0
 local macroStartTime = nil -- Время начала работы макроса на точке
 local totalMacroTime = 0 -- Общее время работы макроса
 macroStartTime = os.time()
+
+local started = false
 
 register2DRenderer(function(context)
     local scale = context.getWindowScale()
@@ -35,8 +44,7 @@ register2DRenderer(function(context)
     local caught_text = "§bCaught: " .. tostring(caught)
     local killed_text = "§cKilled: " .. tostring(killed)
     local time_text = "§f" .. time_str
-        
-    -- Assuming getTextWidth takes the text and returns width for scale=1
+
     local title_width = context.getTextWidth(title_text)
     local abilities_width = context.getTextWidth(abilities_text)
     local caught_width = context.getTextWidth(caught_text)
@@ -51,13 +59,13 @@ register2DRenderer(function(context)
     local center_y_abilities = (scale.height / 2) - 15  -- Slightly above cent
 
     local center_x_caught = (scale.width - caught_width) / 2
-    local center_y_caught = (scale.height / 2) + 4  -- Slightly above center
+    local center_y_caught = (scale.height / 2) + 5  -- Slightly above center
 
     local center_x_killed = (scale.width - killed_width) / 2
-    local center_y_killed = (scale.height / 2) + 14
+    local center_y_killed = (scale.height / 2) + 15
 
     local center_x_time = (scale.width - time_width) / 2
-    local center_y_time = (scale.height / 2) + 24  -- Slightly above cent
+    local center_y_time = (scale.height / 2) + 26  -- Slightly above cent
         
         
     local obj0 = {
@@ -112,7 +120,7 @@ local function hasTargetEntityNearby()
             local distance = entity.distance_to_player
 
             -- Проверяем наличие "Lv" в имени и расстояние до игрока
-            if entityName and string.find(entityName, "Lv") and distance <= 5 * 5 and 
+            if entityName and string.find(entityName, "Lv") and distance <= ABILITY_RANGE * ABILITY_RANGE and
                entity.uuid ~= player.entity.uuid and 
                entity.type ~= "entity.minecraft.experience_orb" and 
                entity.type ~= "entity.minecraft.fishing_bobber" and 
@@ -149,6 +157,11 @@ local function hasTargetEntityNearby()
 end
 
 registerClientTick(function()
+    if player.fishHook == nil and not started then
+        player.input.silentUse(0)
+        started = true
+    end
+
     local entities = world.getEntities()
     local foundTarget = false
 
@@ -171,18 +184,24 @@ registerClientTick(function()
 
     -- Обработка состояний
     if state.phase == "pressing" then
+        player.input.setSelectedSlot(FISHGROD_SLOT)
         state.tick = state.tick + 1
         if state.tick >= PRESS_DELAY then
-            player.input.silentUse(0)
-            --player.input.silentUse(1)
-            caught = caught + 1
-            --abilities = abilities + 1
-            state.phase = "pressed"
-            state.tick = 0
+            player.input.silentUse(FISHGROD_SLOT)
+            if MODE == "OneShot" then
+                player.input.silentUse(ABILITY_SLOT)
+                abilities = abilities + 1
+                state.phase = "releasing"
+                state.tick = 0
+            else
+                caught = caught + 1
+                state.phase = "pressed"
+                state.tick = 0
+            end
         end
     elseif state.phase == "pressed" then
         state.tick = state.tick + 1
-        if state.tick >= 7 then
+        if state.tick >= ENTITY_SPAWN_DELAY then
             state.phase = "ability"
             state.tick = 0
         end
@@ -190,7 +209,7 @@ registerClientTick(function()
         state.tick = state.tick + 1
         
         -- Задержка перед проверкой сущности
-        if state.tick <= 2 then
+        if state.tick <= ENTITY_CHECK_DELAY then
             return
         end
         
@@ -198,36 +217,34 @@ registerClientTick(function()
         local hasLvEntity = hasTargetEntityNearby()
         
         if hasLvEntity then
+            player.input.setSelectedSlot(ABILITY_SLOT)
             -- Вычисляем тики после задержки
-            local ticksAfterDelay = state.tick - 2
+            local ticksAfterDelay = state.tick - ENTITY_CHECK_DELAY
             
             -- Первая проверка после задержки - используем сразу
             if ticksAfterDelay == 1 then
-                player.input.silentUse(1)
+                player.input.silentUse(ABILITY_SLOT)
                 abilities = abilities + 1
-                player.addMessage("§cUsed ability immediately - §3Sea creature §centity nearby")
-                state.tick = 4
+                player.addMessage(PREFIX .. " §cUsed ability immediately - §3Sea creature §centity nearby")
+                state.tick = ENTITY_CHECK_DELAY + 2
             else
                 if ticksAfterDelay >= ABILITY_DELAY then
-                    player.input.silentUse(1)
+                    player.input.silentUse(ABILITY_SLOT)
                     abilities = abilities + 1
-                    player.addMessage("§cUsed ability after delay - §3Sea creature §centity nearby")
-                    state.tick = 4  
-                else
-                    if ticksAfterDelay % 5 == 0 then
-                        --player.addMessage("§aWaiting for ability delay... " .. ticksAfterDelay .. "/" .. ABILITY_DELAY)
-                    end
+                    player.addMessage(PREFIX .. " §cUsed ability after delay - §3Sea creature §centity nearby")
+                    state.tick =  ENTITY_CHECK_DELAY + 2
                 end
             end
         else
-            player.addMessage("§cNo §3Sea creature §centity nearby, skipping next ability")
+            player.addMessage(PREFIX .. " §cNo §3Sea creature §centity nearby, skipping damage ability")
+            player.input.setSelectedSlot(FISHGROD_SLOT)
             state.phase = "releasing"
             state.tick = 0
         end
     elseif state.phase == "releasing" then
         state.tick = state.tick + 1
         if state.tick >= RELEASE_DELAY then
-            player.input.silentUse(0)
+            player.input.silentUse(FISHGROD_SLOT)
             state.phase = "idle"
             state.targetEntity = nil
             state.tick = 0
