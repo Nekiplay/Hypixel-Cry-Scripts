@@ -9,7 +9,7 @@
 | Mithril Mining       | Auto mithril mining                            | [Neki_play](https://github.com/Nekiplay) | 1.1.1           | [Download](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/mining_v6.zip)                  |
 | Farming              | Semi automated farming in garden               | [Neki_play](https://github.com/Nekiplay) | 1.1.1           | [Download](https://github.com/Nekiplay/Hypixel-Cry-Scripts/raw/refs/heads/main/farming.zip)                  |
 | [Glacite](https://youtu.be/vspWDZu9E-w)              | Automated farming glacite powder               | [Neki_play](https://github.com/Nekiplay) | 1.1.3           | [Raw](https://raw.githubusercontent.com/Nekiplay/Hypixel-Cry-Scripts/refs/heads/main/glacite_v2.lua)                  |
-| AutoFish             | Simple auto fish prefered for Yeti Sword       | [Neki_play](https://github.com/Nekiplay) | 1.1.3.1         | [Raw](https://raw.githubusercontent.com/Nekiplay/Hypixel-Cry-Scripts/refs/heads/main/fishing.lua)           |
+| AutoFish             | Simple auto fish prefered for Yeti Sword       | [Neki_play](https://github.com/Nekiplay) | 1.1.3.2         | [Raw](https://raw.githubusercontent.com/Nekiplay/Hypixel-Cry-Scripts/refs/heads/main/fishing.lua)           |
 
 
 ## Libraries
