@@ -1,9 +1,11 @@
-local PRESS_DELAY = 1   -- Задержка перед нажатием
-local ABILITY_DELAY = 24   -- Задержка перед нажатием способности
+local PRESS_DELAY_MIN = 2   -- Минимальная задержка перед нажатием
+local PRESS_DELAY_MAX = 4   -- Минимальная задержка перед нажатием
+local ABILITY_DELAY = 23   -- Задержка перед нажатием способности
 local ABILITY_RANGE = 5 -- Растояние способности для убийства
-local RELEASE_DELAY = 1 -- Задержка перед отжатием
+local RELEASE_DELAY_MIN = 1 -- Задержка перед отжатием
+local RELEASE_DELAY_MAX = 2 -- Задержка перед отжатием
 local ENTITY_CHECK_DELAY = 2 -- Задержка следующей проверки что сущность есть рядом
-local ENTITY_SPAWN_DELAY = 9 -- Задержка проверки того что сущность появилась
+local ENTITY_SPAWN_DELAY = 7 -- Задержка проверки того что сущность появилась
 local PREFIX = "§7[§6Hypixel Cry§7]" -- Префикс для чата
 local MODE = "Normal" -- "OneShot", "Normal"
 
@@ -19,6 +21,9 @@ local state = {
 local caught = 0
 local abilities = 0
 local killed = 0
+
+local PRESS_DELAY = 1
+local RELEASE_DELAY = 1
 
 local macroStartTime = nil -- Время начала работы макроса на точке
 local totalMacroTime = 0 -- Общее время работы макроса
@@ -128,6 +133,8 @@ local function hasTargetEntityNearby()
                 
                 currentEntities[entity.uuid] = true
                 foundAny = true
+                PRESS_DELAY = math.floor(math.random(PRESS_DELAY_MIN, PRESS_DELAY_MAX))
+                RELEASE_DELAY = math.floor(math.random(RELEASE_DELAY_MIN, RELEASE_DELAY_MAX))
                 
                 -- Если это новая сущность, добавляем в отслеживаемые
                 if not trackedEntities[entity.uuid] then
